@@ -26,7 +26,9 @@ export class InMemoryCache<V = unknown> extends BaseCache<V> {
               if (cached.exp == null || now < cached.exp) {
                 const value = await this.serde.loadsTyped(
                   cached.enc,
-                  cached.val
+                  typeof cached.val === "string"
+                    ? cached.val
+                    : new Uint8Array(cached.val)
                 );
                 return [{ key: fullKey, value }];
               } else {
@@ -52,7 +54,9 @@ export class InMemoryCache<V = unknown> extends BaseCache<V> {
       const exp = ttl != null ? ttl * 1000 + now : null;
 
       this.cache[strNamespace] ??= {};
-      this.cache[strNamespace][key] = { enc, val, exp };
+      // Serializers may return the caller's buffer, including Node Buffers
+      // whose slice() method would still share the underlying bytes.
+      this.cache[strNamespace][key] = { enc, val: new Uint8Array(val), exp };
     }
   }
 
