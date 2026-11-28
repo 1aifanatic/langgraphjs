@@ -746,7 +746,7 @@ export class RemoteGraph<
         namespace = [];
       }
       const callerNamespace = options?.configurable?.checkpoint_ns;
-      if (typeof callerNamespace === "string") {
+      if (typeof callerNamespace === "string" && callerNamespace.length > 0) {
         namespace = callerNamespace
           .split(CHECKPOINT_NAMESPACE_SEPARATOR)
           .concat(namespace);

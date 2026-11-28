@@ -525,6 +525,39 @@ describe("RemoteGraph", () => {
     ]);
   });
 
+  test("stream keeps the root checkpoint namespace out of subgraph paths", async () => {
+    const client = new Client();
+    vi.spyOn((client as any).runs, "stream").mockImplementation(
+      async function* () {
+        yield { event: "updates", data: { root: 1 } };
+        yield { event: "updates|child:abc", data: { nested: 2 } };
+      },
+    );
+    const remote = new RemoteGraph({ client, graphId: "graph" });
+    const parentParts: unknown[] = [];
+    const parts = await gatherIterator(
+      remote.stream({}, {
+        configurable: {
+          thread_id: "thread",
+          checkpoint_ns: "",
+          [CONFIG_KEY_STREAM]: {
+            modes: new Set(["updates"]),
+            push: (part: unknown) => parentParts.push(part),
+          },
+        },
+        streamMode: ["updates"],
+        subgraphs: true,
+      }),
+    );
+
+    const expected = [
+      [[], "updates", { root: 1 }],
+      [["child:abc"], "updates", { nested: 2 }],
+    ];
+    expect(parts).toEqual(expected);
+    expect(parentParts).toEqual(expected);
+  });
+
   test("stream without subgraphs skips subgraph events requested for the parent stream", async () => {
     const client = new Client({});
     let streamArgs: unknown[] | undefined;
