@@ -195,11 +195,11 @@ export async function startServer(
         store: z.boolean().optional(),
       })
     ),
-    (c) => {
+    async (c) => {
       const { runs, threads, assistants, checkpointer, store } =
         c.req.valid("json");
 
-      ops.truncate({ runs, threads, assistants, checkpointer, store });
+      await ops.truncate({ runs, threads, assistants, checkpointer, store });
       return c.json({ ok: true });
     }
   );

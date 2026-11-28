@@ -46,12 +46,12 @@ export class InMemorySaver extends MemorySaver {
     return conn;
   }
 
-  clear() {
-    // { [threadId: string]: { [checkpointNs: string]: { [checkpointId]: [checkpoint, metadata, parentId] } }}
-    this.storage = {};
-
-    // { [WriteKey]: CheckpointPendingWrite[] }
-    this.writes = {};
+  async clear() {
+    await conn.with(({ storage, writes }) => {
+      // The saver and the persistence layer share these objects.
+      for (const threadId of Object.keys(storage)) delete storage[threadId];
+      for (const key of Object.keys(writes)) delete writes[key];
+    });
   }
 
   // Patch every method that has access to this.storage or this.writes

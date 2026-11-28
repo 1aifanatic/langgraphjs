@@ -49,14 +49,14 @@ export class FileSystemOps implements Ops {
     this.threads = new FileSystemThreads(this.conn);
   }
 
-  truncate(flags: {
+  async truncate(flags: {
     runs?: boolean;
     threads?: boolean;
     assistants?: boolean;
     checkpointer?: boolean;
     store?: boolean;
   }): Promise<void> {
-    return this.conn.with((STORE) => {
+    await this.conn.with(async (STORE) => {
       if (flags.runs) STORE.runs = {};
       if (flags.threads) STORE.threads = {};
       if (flags.assistants) {
@@ -69,8 +69,8 @@ export class FileSystemOps implements Ops {
         );
       }
 
-      if (flags.checkpointer) checkpointer.clear();
-      if (flags.store) store.clear();
+      if (flags.checkpointer) await checkpointer.clear();
+      if (flags.store) await store.clear();
     });
   }
 }
