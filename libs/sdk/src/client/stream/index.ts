@@ -1808,11 +1808,10 @@ export class ThreadStream<
     const transform =
       unwrapNamedCustom && hasOnlyNamedCustom
         ? (event: Event) =>
-            (
-              (event.params as Record<string, unknown>).data as {
-                payload?: unknown;
-              }
-            )?.payload ?? event
+            event.method === "custom" &&
+            event.params.data?.payload !== undefined
+              ? event.params.data.payload
+              : event
         : undefined;
 
     if (this.#transportAdapter.openEventStream != null) {

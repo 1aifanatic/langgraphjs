@@ -517,6 +517,19 @@ describe("custom:name subscriptions", () => {
     expect(received).toEqual({ hello: "world" });
   });
 
+  it("delivers a null payload to the named shortcut and the full event to the object subscription", async () => {
+    const transport = new MockTransport();
+    const thread = new ThreadStream(transport, { assistantId: "test-agent" });
+    const payloads = await thread.subscribe("custom:activity");
+    const events = await thread.subscribe({ channels: ["custom:activity"] });
+    const event = eventOf("custom", { name: "activity", payload: null });
+
+    transport.pushEvent(event);
+    await expect(nextValue(payloads)).resolves.toBeNull();
+    await expect(nextValue(events)).resolves.toEqual(event);
+    await thread.close();
+  });
+
   it("delivers full events for plain 'custom' subscriptions", async () => {
     const transport = new MockTransport();
     const thread = new ThreadStream(transport, { assistantId: "test-agent" });
